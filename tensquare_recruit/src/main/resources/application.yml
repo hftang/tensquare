@@ -5,15 +5,11 @@ spring:
     name: tensquare-recruit #指定服务名
   datasource:  
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.25.129:3306/tensquare_recruit?characterEncoding=UTF8
+    url: jdbc:mysql://192.168.217.129:3306/tensquare_recruit?characterEncoding=utf-8
     username: root
     password: root
-  jpa: 
-    database: MySQL
+  jpa:
+    database: mysql
     show-sql: true
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:6868/eureka
-  instance:
-    prefer-ip-address: true
+    generate-ddl: true
+
