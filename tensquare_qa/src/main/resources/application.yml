@@ -5,7 +5,7 @@ spring:
     name: tensquare-qa #指定服务名
   datasource:  
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.217.128:3306/tensquare_qa?characterEncoding=utf-8
+    url: jdbc:mysql://192.168.217.129:3306/tensquare_qa?characterEncoding=utf-8
     username: root
     password: root
   jpa: 
@@ -14,9 +14,4 @@ spring:
 jwt:
   config:
     key: itcast
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:6868/eureka
-  instance:
-    prefer-ip-address: true
+

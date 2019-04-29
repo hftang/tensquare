@@ -1,48 +1,30 @@
 package com.tensquare.qa.dao;
 
+import com.tensquare.qa.pojo.Problem;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-
-import com.tensquare.qa.pojo.Problem;
 import org.springframework.data.jpa.repository.Query;
 
 /**
  * 数据访问接口
- * @author Administrator
  *
+ * @author Administrator
  */
-public interface ProblemDao extends JpaRepository<Problem,String>,JpaSpecificationExecutor<Problem>{
+public interface ProblemDao extends JpaRepository<Problem, String>, JpaSpecificationExecutor<Problem> {
 
-    /**
-     * 最新回答
-     * @param labelId
-     * @param pageable
-     * @return
-     */
-    @Query("select p from Problem p where id in ( select problemid from Pl where labelid=?1 ) order by p.replytime desc ")
-    public Page<Problem> findNewListByLabelId(String labelId, Pageable pageable);
+    //最新问题
+    @Query(value = "select * from tb_problem,tb_pl where id = problemid and labelid = ? order by replytime desc", nativeQuery = true)
+    public Page<Problem> newlist(String labelid, Pageable pageable);
 
+    //热门
+    @Query(value = "select * from tb_problem,tb_pl where id = problemid and labelid = ? order by reply desc", nativeQuery = true)
+    public Page<Problem> hotlist(String labelid, Pageable pageable);
 
-    /**
-     * 热门回答
-     * @param labelId
-     * @param pageable
-     * @return
-     */
-    @Query("select p from Problem p where id in ( select problemid from Pl where labelid=?1 ) order by p.reply desc ")
-    public Page<Problem> findHotListByLabelId(String labelId, Pageable pageable);
+    //待回答
+    @Query(value = "SELECT * FROM tb_problem,tb_pl WHERE id = problemid AND labelid = ? AND reply = 0 ORDER BY createtime DESC", nativeQuery = true)
+    public Page<Problem> waitlist(String labelid, Pageable pageable);
 
-
-    /**
-     * 等待回答
-     * @param labelId
-     * @param pageable
-     * @return
-     */
-    @Query("select p from Problem p where id in ( select problemid from Pl where labelid=?1 ) and p.reply=0  order by p.createtime desc ")
-    public Page<Problem> findWaitListByLabelId(String labelId, Pageable pageable);
 
 }
