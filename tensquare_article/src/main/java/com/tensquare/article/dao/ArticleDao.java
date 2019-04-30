@@ -9,25 +9,19 @@ import org.springframework.data.jpa.repository.Query;
 
 /**
  * 数据访问接口
- * @author Administrator
  *
+ * @author Administrator
  */
-public interface ArticleDao extends JpaRepository<Article,String>,JpaSpecificationExecutor<Article>{
+public interface ArticleDao extends JpaRepository<Article, String>, JpaSpecificationExecutor<Article> {
 
-    /**
-     * 审核
-     * @param id
-     */
+    //文章的审核 增删改都要添加 Modifying
     @Modifying
-    @Query("update Article set state='1' where id=?1")
-    public void examine(String id);
+    @Query(value = "update tb_article set state = 1 where id = ?", nativeQuery = true)
+    public void updateState(String id);
 
-    /**
-     * 点赞
-     * @param id
-     */
+    //点赞数
     @Modifying
-    @Query("update Article set thumbup=thumbup+1 where id=?1")
-    public void updateThumbup(String id);
+    @Query(value = "update tb_article set thumbup = thumbup + 1 where id = ?1", nativeQuery = true)
+    public void addThumpup(String id);
 
 }
