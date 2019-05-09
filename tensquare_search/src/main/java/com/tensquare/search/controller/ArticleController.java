@@ -6,13 +6,10 @@ import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * @author hftang
- * @date 2019-05-07 14:31
- * @desc
+ * 文章搜索控制器类
  */
 @RestController
 @CrossOrigin
@@ -23,18 +20,23 @@ public class ArticleController {
     private ArticleService articleService;
 
     @RequestMapping(method = RequestMethod.POST)
-    public Result save(@RequestBody Article article) {
-        articleService.save(article);
-        return new Result(true, StatusCode.OK, "添加成功");
+    public Result add(@RequestBody Article article){
+        articleService.add(article);
+        return new Result(true, StatusCode.OK,"添加成功");
     }
 
-    //根据关键字查询
-    @RequestMapping(value = "/{key}/{page}/{size}", method = RequestMethod.GET)
-    public Result findByKey(@PathVariable String key, @PathVariable int page, @PathVariable int size) {
 
-        Page<Article> pageData = articleService.findByKey(key, page, size);
-
-        return new Result(true, StatusCode.OK, "根据关键字查询成功", new PageResult<Article>(pageData.getTotalElements(), pageData.getContent()));
+    /**
+     * 根据关键字查询
+     * @param keywords
+     * @param page
+     * @param size
+     * @return
+     */
+    @RequestMapping(value="/search/{keywords}/{page}/{size}",method = RequestMethod.GET)
+    public Result findByKeywords(@PathVariable String keywords,@PathVariable  int page, @PathVariable  int size){
+        PageResult pageResult = articleService.findByKeywords(keywords, page, size);
+        return  new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
 }

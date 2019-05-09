@@ -6,20 +6,18 @@ import org.springframework.context.annotation.Bean;
 import util.IdWorker;
 
 /**
- * @author hftang
- * @date 2019-05-07 11:07
- * @desc
+ * 搜索微服务启动类
  */
-
 @SpringBootApplication
 public class SearchApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SearchApplication.class, args);
+        SpringApplication.run(SearchApplication.class);
     }
 
     @Bean
-    public IdWorker create() {
-        return new IdWorker(1, 1);
+    public IdWorker idWorker(){
+        return new IdWorker(1,1);
     }
+
 }

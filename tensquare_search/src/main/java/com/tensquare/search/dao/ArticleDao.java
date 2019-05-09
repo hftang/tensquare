@@ -6,12 +6,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**
- * @author hftang
- * @date 2019-05-07 14:25
- * @desc
+ * 文章数据访问层
  */
-public interface ArticleDao extends ElasticsearchRepository<Article, String> {
+public interface ArticleDao extends ElasticsearchRepository<Article,String> {
 
-    public Page<Article> findByTitleAndContentLike(String title, String content, Pageable pageable);
+    /**
+     * 根据标题或内容模糊匹配
+     * @param title
+     * @param content
+     * @param pageable
+     * @return
+     */
+    public Page<Article> findByTitleOrContentLike(String title, String content, Pageable pageable);
 
 }

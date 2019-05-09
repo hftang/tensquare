@@ -2,37 +2,40 @@ package com.tensquare.search.service;
 
 import com.tensquare.search.dao.ArticleDao;
 import com.tensquare.search.pojo.Article;
+import entity.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import util.IdWorker;
 
 /**
- * @author hftang
- * @date 2019-05-07 14:27
- * @desc
+ * 文章服务类
  */
 @Service
-@Transactional
 public class ArticleService {
 
     @Autowired
     private ArticleDao articleDao;
-    @Autowired
-    private IdWorker idWorker;
 
-    public void save(Article article) {
-        article.setId(idWorker.nextId() + "");
+    /**
+     * 增加
+     * @param article
+     */
+    public  void add(Article article){
         articleDao.save(article);
     }
 
-
-    public Page<Article> findByKey(String key, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Article> article = articleDao.findByTitleAndContentLike(key, key, pageable);
-        return article;
+    /**
+     * 根据关键字查询文章
+     * @param keywords
+     * @param page
+     * @param size
+     * @return
+     */
+    public PageResult findByKeywords(String keywords,int page,int size){
+        PageRequest pageRequest= PageRequest.of(page-1,size);
+        Page<Article> pageList = articleDao.findByTitleOrContentLike(keywords, keywords, pageRequest);
+        return new PageResult(pageList.getTotalElements(),pageList.getContent() );
     }
+
 }

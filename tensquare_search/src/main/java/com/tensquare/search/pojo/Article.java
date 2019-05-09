@@ -7,30 +7,20 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import java.io.Serializable;
 
 /**
- * @author hftang
- * @date 2019-05-07 11:12
- * @desc
+ * 文章实体类
  */
-
-// indexName 数据库的名称
-// type 表的名称
-@Document(indexName = "tensquare_article", type = "article")
+@Document(indexName = "tensquare_article",type = "article")
 public class Article implements Serializable {
 
     @Id
-    private String id;
+    private String id;//主键
 
-    //该域是否能被搜素  索引
-    //是否分词  是整体匹配还是单词匹配
-    //是否存储  是否在页面上显示
+    @Field(index = true, analyzer = "ik_max_word" ,searchAnalyzer = "ik_max_word")
+    private String title;//标题
 
-    @Field(index = true, analyzer = "ik_max_word", searchAnalyzer = "ik_max_word")
-    private String title;
-    @Field(index = true, analyzer = "ik_max_word", searchAnalyzer = "ik_max_word")
-    private String content;
-
-    private String state;//审核状态
-
+    @Field(index = true, analyzer = "ik_max_word" ,searchAnalyzer = "ik_max_word")
+    private String content;//正文
+    private String state;//状态
 
     public String getId() {
         return id;
