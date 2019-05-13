@@ -6,7 +6,6 @@ import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-import util.JwtUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,8 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class JwtFilter extends HandlerInterceptorAdapter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+//    @Autowired
+//    private JwtUtil jwtUtil;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -30,7 +29,8 @@ public class JwtFilter extends HandlerInterceptorAdapter {
         if( header!=null ){
             if(header.startsWith("Bearer ")){
                 String token = header.substring(7);
-                Claims claims = jwtUtil.parseJWT(token);//获取载荷
+                Claims claims = null;
+//                        jwtUtil.parseJWT(token);//获取载荷
                 if(claims!=null){
                     if(claims.get("roles").equals("admin")){//管理员身份
                         request.setAttribute("admin_claims",claims);

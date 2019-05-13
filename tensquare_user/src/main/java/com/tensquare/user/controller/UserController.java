@@ -6,8 +6,10 @@ import java.util.Map;
 
 import io.jsonwebtoken.Claims;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +23,6 @@ import com.tensquare.user.service.UserService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
-import util.JwtUtil;
 
 /**
  * 控制器层
@@ -35,13 +36,39 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 发送短息
      */
-    @RequestMapping(value="/sendsms/{mobile}",method=RequestMethod)
-    public Result sendSms() {
+    @RequestMapping(value = "/sendsms/{mobile}", method = RequestMethod.POST)
+    public Result sendSms(@PathVariable String mobile) {
+        userService.sendSms(mobile);
 
+        return new Result(true, StatusCode.OK, "发送短信成功");
+    }
+
+    /**
+     * 注册
+     */
+    @RequestMapping(value = "/regist/{code}", method = RequestMethod.POST)
+    public Result regist(@PathVariable String code, @RequestBody User user) {
+        String mobile = user.getMobile();
+        //先从缓存中取
+        String redis_checkcode = (String) redisTemplate.opsForValue().get("checkcode_" + mobile);
+        if (redis_checkcode.isEmpty()) {
+            return new Result(true, StatusCode.ERROR, "请先获取手机验证码");
+        }
+
+        //比较传过来的验证码 跟 缓存中的验证码是否一致
+        if (!redis_checkcode.equals(code)) {
+            return new Result(true, StatusCode.ERROR, "手机验证码有误");
+        }
+
+        userService.add(user);
+
+        return new Result(true, StatusCode.OK, "账号注册成功");
     }
 
     /**
@@ -104,17 +131,6 @@ public class UserController {
 
 
     /**
-     * 注册
-     *
-     * @param user
-     */
-    @RequestMapping(value = "/register/{code}", method = RequestMethod.POST)
-    public Result register(@RequestBody User user, @PathVariable String code) {
-        userService.add(user, code);
-        return new Result(true, StatusCode.OK, "用户注册成功");
-    }
-
-    /**
      * 修改
      *
      * @param user
@@ -126,47 +142,47 @@ public class UserController {
         return new Result(true, StatusCode.OK, "修改成功");
     }
 
-    @Autowired
-    private HttpServletRequest request;
+//    @Autowired
+//    private HttpServletRequest request;
+//
+//
+//    /**
+//     * 删除
+//     *
+//     * @param id
+//     */
+//    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+//    public Result delete(@PathVariable String id) {
+//        //微服务鉴权
+//		/*
+//		String header = request.getHeader("Authorization");
+//		if(header==null){
+//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
+//		}
+//		if(!header.startsWith("Bearer ")){
+//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
+//		}
+//		String token = header.substring(7);//
+//		Claims claims = jwtUtil.parseJWT(token);//获取载荷
+//		if(claims==null){
+//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
+//		}
+//		if(!claims.get("roles").equals("admin"))	{
+//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
+//		}
+//*/
+//        Claims claims = (Claims) request.getAttribute("admin_claims");
+//        if (claims == null) {
+//            return new Result(false, StatusCode.ACCESSERROR, "权限不足");
+//        }
+//
+//        userService.deleteById(id);
+//        return new Result(true, StatusCode.OK, "删除成功");
+//    }
 
 
-    /**
-     * 删除
-     *
-     * @param id
-     */
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public Result delete(@PathVariable String id) {
-        //微服务鉴权
-		/*
-		String header = request.getHeader("Authorization");
-		if(header==null){
-			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-		}
-		if(!header.startsWith("Bearer ")){
-			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-		}
-		String token = header.substring(7);//
-		Claims claims = jwtUtil.parseJWT(token);//获取载荷
-		if(claims==null){
-			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-		}
-		if(!claims.get("roles").equals("admin"))	{
-			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-		}
-*/
-        Claims claims = (Claims) request.getAttribute("admin_claims");
-        if (claims == null) {
-            return new Result(false, StatusCode.ACCESSERROR, "权限不足");
-        }
-
-        userService.deleteById(id);
-        return new Result(true, StatusCode.OK, "删除成功");
-    }
-
-
-    @Autowired
-    private JwtUtil jwtUtil;
+//    @Autowired
+//    private JwtUtil jwtUtil;
 
     /**
      * 用户登陆
@@ -180,7 +196,8 @@ public class UserController {
         if (user != null) {
 
             //签发token
-            String token = jwtUtil.createJWT(user.getId(), user.getNickname(), "user");
+            String token = "";
+//                    jwtUtil.createJWT(user.getId(), user.getNickname(), "user");
             Map map = new HashMap();
             map.put("token", token);
             map.put("name", user.getNickname());
