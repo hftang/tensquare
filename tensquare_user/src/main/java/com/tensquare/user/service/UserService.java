@@ -9,9 +9,12 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 
+import io.jsonwebtoken.Claims;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,6 +29,7 @@ import util.IdWorker;
 
 import com.tensquare.user.dao.UserDao;
 import com.tensquare.user.pojo.User;
+import util.JwtUtil;
 
 /**
  * 服务层
@@ -40,6 +44,10 @@ public class UserService {
 
     @Autowired
     private IdWorker idWorker;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private HttpServletRequest request;
 
     /**
      * 查询全部列表
@@ -126,7 +134,8 @@ public class UserService {
     public void add(User user) {
 
         user.setId(idWorker.nextId() + "");
-
+        String newpassword = encoder.encode(user.getPassword());
+        user.setPassword(newpassword);
         //刚注册的用户的基础信息
         user.setFollowcount(0);
         user.setFanscount(0);
@@ -136,10 +145,26 @@ public class UserService {
         user.setLastdate(new Date());
 
 
-        String newpassword = encoder.encode(user.getPassword());
-        user.setPassword(newpassword);
         userDao.save(user);
     }
+
+    /**
+     * 删除
+     *
+     * @param id
+     */
+    public void deleteById(String id) {
+
+        //从域中获取
+        String token = (String) request.getAttribute("claims_admin");
+        if(StringUtils.isEmpty(token)){
+            throw new RuntimeException("权限不足");
+        }
+
+
+        userDao.deleteById(id);
+    }
+
 
     /**
      * 修改
@@ -150,14 +175,6 @@ public class UserService {
         userDao.save(user);
     }
 
-    /**
-     * 删除
-     *
-     * @param id
-     */
-    public void deleteById(String id) {
-        userDao.deleteById(id);
-    }
 
     /**
      * 动态条件构建
@@ -280,4 +297,15 @@ public class UserService {
         userDao.incFollowcount(userid, x);
     }
 
+
+    //用户登录
+    public User login(String mobile, String password) {
+
+        User mobileUser = userDao.findByMobile(mobile);
+        if (mobileUser != null && encoder.matches(password, mobileUser.getPassword())) {
+            return mobileUser;
+        }
+
+        return null;
+    }
 }

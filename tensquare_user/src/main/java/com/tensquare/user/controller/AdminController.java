@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.tensquare.user.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,6 +29,7 @@ import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import util.JwtUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +46,8 @@ public class AdminController {
 
     @Autowired
     private AdminService adminService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
 
     /**
@@ -94,14 +98,37 @@ public class AdminController {
     }
 
     /**
-     * 增加
+     * 注册
      *
      * @param admin
      */
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, value = "/regist")
     public Result add(@RequestBody Admin admin) {
         adminService.add(admin);
-        return new Result(true, StatusCode.OK, "增加成功");
+        return new Result(true, StatusCode.OK, "admin账号注册成功");
+    }
+
+    /**
+     * 登录
+     */
+
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public Result login(@RequestBody Admin admin) {
+        Admin admin01 = adminService.login(admin);
+        if (admin01 == null) {
+            return new Result(false, StatusCode.LOGINERROR, "登录失败");
+        }
+
+        //在admin 登录成功后 生成 token
+
+        String token = jwtUtil.createJWT(admin01.getId(), admin01.getLoginname(), "admin");
+
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("token", token);
+        map.put("role", "admin");
+
+        return new Result(true, StatusCode.OK, "登录成功", map);
     }
 
     /**
@@ -136,22 +163,23 @@ public class AdminController {
      * @param loginMap
      * @return
      */
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Result login(@RequestBody Map<String, String> loginMap) {
+//    @RequestMapping(value = "/login", method = RequestMethod.POST)
+//    public Result login(@RequestBody Map<String, String> loginMap) {
+//
+//        Admin admin = adminService.findByLoginnameAndPassword(loginMap.get("loginname"), loginMap.get("password"));
+//        if (admin != null) {//登陆成功
+//            //签发token
+////			String token = jwtUtil.createJWT(admin.getId(), admin.getLoginname(), "admin");
+//            String token = "";
+//            Map map = new HashMap();
+//            map.put("token", token);
+//            map.put("name", admin.getLoginname());
+//            return new Result(true, StatusCode.OK, "登陆成功", map);
+//        } else {
+//            return new Result(false, StatusCode.LOGINERROR, "用户名或密码错误");
+//        }
+//
+//    }
 
-        Admin admin = adminService.findByLoginnameAndPassword(loginMap.get("loginname"), loginMap.get("password"));
-        if (admin != null) {//登陆成功
-            //签发token
-//			String token = jwtUtil.createJWT(admin.getId(), admin.getLoginname(), "admin");
-            String token = "";
-            Map map = new HashMap();
-            map.put("token", token);
-            map.put("name", admin.getLoginname());
-            return new Result(true, StatusCode.OK, "登陆成功", map);
-        } else {
-            return new Result(false, StatusCode.LOGINERROR, "用户名或密码错误");
-        }
-
-    }
 
 }

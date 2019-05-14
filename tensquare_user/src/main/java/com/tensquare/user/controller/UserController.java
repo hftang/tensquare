@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.tensquare.user.dao.UserDao;
 import io.jsonwebtoken.Claims;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +24,7 @@ import com.tensquare.user.service.UserService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+import util.JwtUtil;
 
 /**
  * 控制器层
@@ -36,8 +38,11 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /**
      * 发送短息
@@ -142,71 +147,43 @@ public class UserController {
         return new Result(true, StatusCode.OK, "修改成功");
     }
 
-//    @Autowired
-//    private HttpServletRequest request;
-//
-//
-//    /**
-//     * 删除
-//     *
-//     * @param id
-//     */
-//    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-//    public Result delete(@PathVariable String id) {
-//        //微服务鉴权
-//		/*
-//		String header = request.getHeader("Authorization");
-//		if(header==null){
-//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-//		}
-//		if(!header.startsWith("Bearer ")){
-//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-//		}
-//		String token = header.substring(7);//
-//		Claims claims = jwtUtil.parseJWT(token);//获取载荷
-//		if(claims==null){
-//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-//		}
-//		if(!claims.get("roles").equals("admin"))	{
-//			return new Result(false,StatusCode.ACCESSERROR,"权限不足");
-//		}
-//*/
-//        Claims claims = (Claims) request.getAttribute("admin_claims");
-//        if (claims == null) {
-//            return new Result(false, StatusCode.ACCESSERROR, "权限不足");
-//        }
-//
-//        userService.deleteById(id);
-//        return new Result(true, StatusCode.OK, "删除成功");
-//    }
-
-
-//    @Autowired
-//    private JwtUtil jwtUtil;
 
     /**
      * 用户登陆
      *
-     * @param loginMap
      * @return
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Result login(@RequestBody Map<String, String> loginMap) {
-        User user = userService.findByMobileAndPassword(loginMap.get("mobile"), loginMap.get("password"));
-        if (user != null) {
+    public Result login(@RequestBody User user) {
 
-            //签发token
-            String token = "";
-//                    jwtUtil.createJWT(user.getId(), user.getNickname(), "user");
-            Map map = new HashMap();
-            map.put("token", token);
-            map.put("name", user.getNickname());
-            map.put("avatar", user.getAvatar());
-
-            return new Result(true, StatusCode.OK, "登陆成功", map);
-        } else {
-            return new Result(false, StatusCode.LOGINERROR, "用户名或密码错误");
+        User user1 = userService.login(user.getMobile(), user.getPassword());
+        if (user1 == null) {
+            return new Result(false, StatusCode.LOGINERROR, "登录失败");
         }
+
+        //登录成功 生成 token
+        String token = jwtUtil.createJWT(user1.getId(), user1.getMobile(), "user");
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", token);
+        map.put("roles", "user");
+
+
+        return new Result(true, StatusCode.OK, "登录成功", map);
+
+    }
+
+    //删除用户
+
+    /***
+     * 必须是admin 角色 才能删除
+     * @param id
+     * @return
+     */
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
+    public Result delete(@PathVariable String id) {
+        userService.deleteById(id);
+        return new Result(true, StatusCode.OK, "删除成功");
     }
 
 
